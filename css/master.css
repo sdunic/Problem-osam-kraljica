@@ -1,0 +1,15 @@
+﻿html,body 
+{
+	width: 100%;
+	height: 100%;
+	background: WhiteSmoke;
+	margin: 0px;
+	padding: 0px;
+}
+#container
+{
+	width: 1240px;
+	height: 800px;
+	margin-left:auto;
+	margin-right:auto;
+}	

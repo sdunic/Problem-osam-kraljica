@@ -1,0 +1,829 @@
+<!DOCTYPE HTML>
+<!--   
+	Implementacija problema osam kraljica upotrebom HTML, JavaScript programskih jezika te KineticJS razvojnog okruženja.
+-->
+<html>
+<head>
+<!-- 
+	Unutar zaglavlja nalazi se :
+	(1) poziv na KineticJS razvojno okruženje
+	(2) funkcije potrebne za izvedbu igre, te rekurzivni backtrack algoritam
+-->
+<title>Problem osam kraljica</title>
+<link rel="shortcut icon" href="resources/Kraljica.ico"> 
+<meta content="text/html; charset=windows-1250" http-equiv="Content-type" />
+<meta name="application-name" content="Problem osam kraljica">
+<meta name="description" content="Rasporedite svih osam kraljica na šahovsku ploču tako da ni jedna ne napada drugu.">
+<meta name="keywords" content="Problem osam kraljica, eigth queens problem, HTML5, CSS3, JavaScript, KineticJS">
+<meta name="author" content="Stefan Dunić">
+
+<link href="css/master.css" rel="stylesheet" type="text/css"/>
+<!-- (1) --><script type="text/javascript" src="js/kinetic-v4.4.0.js"></script>
+<!-- (2) --><script type="text/javascript">
+function _2dpolje(temp) /* stvaramo dvodimenzionalno polje [temp][temp] */
+{
+	var array = [];	
+	for (var i=0;i<temp;i++) 
+	{
+		array[i] = [];
+	}
+	return array;
+}
+function _postaviNiz() /* omogućujemo spuštanje kraljica na sva polja */
+{
+	for (var i=0;i<8;i++) 
+	{
+		for (var j=0;j<8;j++) 
+		{
+			nizOnemoguceniPolja[i][j] = false;
+		}
+	}
+}
+function kraljica_u_ploci(kraljica) /* provjeravamo da li je kraljica unutar ploče ili izvan nje */
+{
+		if(kraljica.getX() > 100 && kraljica.getX() < (100 + 8*80) && kraljica.getY() > 40 && kraljica.getY() < (40 + 8*80))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+}
+/* 
+	"podizanjem" kraljice se poziva ova funkcija koja nam vizualno prikaže onemogućena polja 
+*/
+function _onemoguci_polja_na_ploci_osim_kraljice(kraljica) 
+{	
+	onemoguciLayer.removeChildren();
+	onemoguciLayer.draw();
+	for(var j = 0; j < 8; j++)
+	{
+		for(var k = 0; k < 8; k++)
+		{
+			nizOnemoguceniPolja[j][k] = false;
+		}
+	}
+	for(var i = 0; i < 8; i++)
+	{
+		if(kraljica.getId() != kraljice[i].getId())
+		{
+			if(kraljica_u_ploci(kraljice[i]))
+			{
+				var x_koordinata_kraljice = Math.floor((kraljice[i].getX() - 100) / 80);
+				var y_koordinata_kraljice = Math.floor((kraljice[i].getY() - 40) / 80);
+				
+				var temp_x_desna_kosa; 
+				var temp_y_desna_kosa;
+				var temp_x_lijeva_kosa;
+				var temp_y_lijeva_kosa;
+				
+				if(x_koordinata_kraljice >= y_koordinata_kraljice)
+				{
+					temp_x_desna_kosa = x_koordinata_kraljice - y_koordinata_kraljice;
+					temp_y_desna_kosa = 0;
+				}
+				else
+				{
+					temp_x_desna_kosa = 0;
+					temp_y_desna_kosa = y_koordinata_kraljice - x_koordinata_kraljice;
+				}
+				
+				for (var m=0; m<8; m++) 
+				{
+					for (var n=0; n<8; n++) 
+					{
+						if( m == x_koordinata_kraljice || n== y_koordinata_kraljice)
+						{	
+							nizOnemoguceniPolja[m][n] = true;
+							var tempRect = new Kinetic.Rect({
+								x: 100 + 80*m + 30,
+								y: 40 + 80*n + 30,
+								width: 20,
+								height: 20,
+								fill: "brown",
+								stroke: "black",
+								strokeWidth: 3,
+								draggable: false
+							  });
+							onemoguciLayer.add(tempRect);
+						}
+						
+						if(m == temp_x_desna_kosa && n == temp_y_desna_kosa)
+						{
+							nizOnemoguceniPolja[m][n] = true;			
+							var tempRect = new Kinetic.Rect({
+									x: 100 + 80*m + 30,
+									y: 40 + 80*n + 30,
+									width: 20,
+									height: 20,
+									fill: "brown",
+									stroke: "black",
+									strokeWidth: 3,
+									draggable: false
+								  });
+							onemoguciLayer.add(tempRect);
+							temp_x_desna_kosa++;
+							temp_y_desna_kosa++;
+						}
+					}
+				}
+				
+				if(x_koordinata_kraljice >= y_koordinata_kraljice)
+				{
+					temp_x_lijeva_kosa = x_koordinata_kraljice + y_koordinata_kraljice;
+					temp_y_lijeva_kosa = 0;
+				}
+				else (x_koordinata_kraljice < y_koordinata_kraljice)
+				{
+					temp_x_lijeva_kosa = 7;
+					temp_y_lijeva_kosa = x_koordinata_kraljice + y_koordinata_kraljice - 7;
+				}
+				
+				while(temp_x_lijeva_kosa >= 0 &&  temp_y_lijeva_kosa <= 7)
+				{
+					if(temp_x_lijeva_kosa >= 0 && temp_x_lijeva_kosa <= 7 && temp_y_lijeva_kosa >= 0 && temp_y_lijeva_kosa <= 7)
+					{
+						nizOnemoguceniPolja[temp_x_lijeva_kosa][temp_y_lijeva_kosa] = true;			
+									var tempRect = new Kinetic.Rect({
+											x: 100 + 80*temp_x_lijeva_kosa+ 30,
+											y: 40 + 80*temp_y_lijeva_kosa + 30,
+											width: 20,
+											height: 20,
+											fill: "brown",
+											stroke: "black",
+											strokeWidth: 3,
+											draggable: false
+										  });
+									onemoguciLayer.add(tempRect);
+					}
+					temp_x_lijeva_kosa--;
+					temp_y_lijeva_kosa++;
+				}
+				onemoguciLayer.draw();
+			}
+		}
+	}
+}
+
+function testPloce() /* koristimo kod izračuna računanja kordinata nakon "spuštanja" kraljice */
+{
+	for(var j = 0; j < 8; j++)
+	{
+		for(var i = 0; i < 8; i++)
+		{
+			if(stage.getPointerPosition().x > nizPoljaPloce[j][i].getX() && stage.getPointerPosition().x < (nizPoljaPloce[j][i].getX() + 80) && stage.getPointerPosition().y > nizPoljaPloce[j][i].getY() && stage.getPointerPosition().y < (nizPoljaPloce[j][i].getY() + 80))
+			{	
+				if(nizOnemoguceniPolja[i][j]==false)
+				{
+					return true;					
+				}
+			}
+		}
+	}
+	return false;
+}
+/*
+	Računamo kordinate kraljice nakon "spuštanja" u ovisnosti o tome da li kraljicu 
+	spuštamo unutar ploče, izvan ploče ili na onemogućenom polju. Ako je na omogućenom polju, računamo "centar" 
+	polja, u suprotnom vraćamo je na početnu poziciju.
+*/
+function izracunaj_Kordinate(kraljica)
+{
+	if(testPloce())
+	{
+		var temp1 = stage.getPointerPosition().x - 100;
+		temp1 = Math.floor(temp1 / 80)*80 + 110;
+		var temp2 = stage.getPointerPosition().y - 40;
+		temp2 = Math.floor(temp2 / 80)*80 + 40 + 10;
+		xy[0] = temp1;
+		xy[1] = temp2;
+		
+	}
+	else
+	{
+		if(stage.getPointerPosition().x > 100 && stage.getPointerPosition().x < (100 + 8*80) && stage.getPointerPosition().y > 40 && stage.getPointerPosition().y < (40 + 8*80))
+		{
+			xy[0] = trenutniX[kraljica.getId()];
+			xy[1] = trenutniY[kraljica.getId()];
+		}
+		else
+		{
+			xy[0] = niz_pocetniX[kraljica.getId()];
+			xy[1] = niz_pocetniY[kraljica.getId()];
+		}
+		
+	}
+	
+}
+/* POSTAVI KRALJICE */
+function postavi_kraljice(){
+	for (var j=0; j<8; j++)
+	{	
+		/* Vraćamo kraljice na njihove početne pozicije izvan ploče. */
+		kraljice[j].transitionTo({
+						x: niz_pocetniX[j],
+						y: niz_pocetniY[j],
+						opacity: 1,
+						duration: 0.6,
+					});
+		trenutniX[j] = niz_pocetniX[j];
+		trenutniY[j] = niz_pocetniY[j];						
+	}
+	broj_rjesenja = 0;
+}
+/* ALGORITAM */
+var N = 8;
+var position = new Array(N);
+function Provjera(stupac, redak){
+	for (var i = 1; i <= stupac; i++) {
+				  var other = position[stupac - i];
+				  if (other == redak || other == redak - i || other == redak + i) {
+					  return false;
+				  }
+			 }
+	
+	return true;
+}	
+var korak = 0;
+var broj_rjesenja = 0;
+var lista_koraka = new Array();
+function Algoritam(stupac) {
+	if (stupac == N) {
+		for(var m = 0; m < N; m++)
+		{
+			rjesenja += (position[m]+1) + " ";
+		}
+		rjesenja += ";  ";
+		ispis_rjesenja();
+	} else {
+		for (var redak = 0; redak < N; redak++) {
+			if (Provjera(stupac, redak)) {
+				position[stupac] = redak;
+				lista_koraka[korak++] = {x: (stupac + 1), y: (position[stupac]+1)};
+				Algoritam(stupac+1);
+			}
+		}
+	}
+}
+/* SIMULACIJA */
+function pokreni_simulaciju(temp){
+	korak = temp;
+	for( j = (lista_koraka[korak].x); j<8; j++){
+			kraljice[j].transitionTo({
+							x: niz_pocetniX[j],
+							y: niz_pocetniY[j],
+							opacity: 1,
+							duration: 0.6
+						});
+	}
+	kraljice[(lista_koraka[korak].x) - 1].transitionTo({
+							x: (lista_koraka[korak].x-1) * 80 + 110,
+							y: (lista_koraka[korak].y-8) * (-80) + 50,
+							opacity: 1,
+							duration: 0.6,
+							callback: function() {
+										 if(lista_koraka[korak].x == 8) {
+											broj_rjesenja++;
+											alert("Pronađeno je " + broj_rjesenja + ". rješenje!\nAko želite prekinuti simulaciju postavite ploču.");
+											}
+										 korak++;
+										 pokreni_simulaciju(korak);
+										}
+						});
+}
+</script>
+</head>
+<!-- 
+	Unutar tijela stranice nalazi se okvir unutar kojeg je napravljena igra na kojoj je 
+	implementiran backtrack algoritam za pronalaženje rješenja korištenjem KineticJS 
+	razvojnog okruženja.
+ -->
+<body>
+</br>
+	<div id="container"></div>
+	<script type="text/javascript">
+		var x_polje = 100;
+		var	y_polje = 40;
+		var xy = [];
+		/* 
+			Stvaramo pozornicu na kojoj ćemo dodavati slojeve, grupe slojeva na koje 
+			ćemo dodavati razne objekte poput slika (crno polje, bijelo polje, kraljica),
+			teksta i pravokutnika 
+		*/
+		var stage = new Kinetic.Stage({
+									  container: 'container',
+									  width: 1240, 
+									  height: 800
+									});
+		var plocaLayer = new Kinetic.Layer();
+		var kraljiceLayer = new Kinetic.Layer();
+		var onemoguciLayer = new Kinetic.Layer();
+		var textLayer = new Kinetic.Layer();
+		var sideTextLayer = new Kinetic.Layer();
+		var rjesenjaTextLayer = new Kinetic.Layer();
+		var group_postavi_kraljice= new Kinetic.Group();
+		var group_prikaz_rjesenja = new Kinetic.Group();
+		var group_simuliraj = new Kinetic.Group();
+		/* 
+			Definiramo varijable nizova koje ćemo koristiti. 
+		*/
+		var kraljice = [];
+		var niz_pocetniX = [];
+		var niz_pocetniY = [];
+		var trenutniX = [];
+		var trenutniY = [];
+		var nizPoljaPloce = _2dpolje(8);
+		var nizOnemoguceniPolja = _2dpolje(8);
+		_postaviNiz();
+		/* 
+			Dodajemo slojeve na našu pozornicu 
+		*/
+		stage.add(rjesenjaTextLayer);
+		stage.add(sideTextLayer);
+		stage.add(textLayer);
+		stage.add(plocaLayer);
+		stage.add(onemoguciLayer);
+		stage.add(kraljiceLayer);
+		/* 
+			Učitavamo slike koje ćemo prikazivati (crno polje, bijelo polje, kraljica) 
+		*/
+		var imageObj = new Image();
+		imageObj.onload = function() {
+			stage.draw();
+		}
+		imageObj.src = 'resources/kraljica.png';
+		var imageCrnoPolje = new Image();
+		imageCrnoPolje.onload = function() {
+			stage.draw();
+		}
+		imageCrnoPolje.src = 'resources/crnoPolje.png';
+		var imageBijeloPolje = new Image();
+		imageBijeloPolje.onload = function() {
+			stage.draw();
+		}
+		imageBijeloPolje.src = 'resources/bijeloPolje.png';
+		/* 
+			Koristeći objekte pravokutnika i teksta kreiramo tekst sa strane tako da
+			objekte strateški pozicioniramo po x, y kordinatama. Prvo stvaramo naslov,
+			zatim sam tekst koji se ispisuje i na kraju pravokutni okvir koje dodajemo 
+			na već postojeći sloj na pozornici. Na isti način kreiramo okvir za rješenja.
+		*/	
+		var sideText_naslov = new Kinetic.Text({
+			x: 100 + 8*80 + 130,
+			y: 40,
+			text: 'Problem 8 kraljica',
+			fontSize: 22,
+			fontFamily: 'Calibri',
+			fontStyle: 'bold',
+			fill: '#555',
+			width: 340,
+			padding: 20,
+			align: 'center'
+		});
+		var sideText = new Kinetic.Text({
+			x: 100 + 8*80 + 130,
+			y: sideText_naslov.getHeight(),
+			text: '\nRasporedite svih 8 kraljica na šahovsku ploču tako da ni jedna ne napada drugu.',
+			fontSize: 18,
+			fontFamily: 'Calibri',
+			fill: '#555',
+			width: 340,
+			padding: 20,
+			align: 'center'
+		});
+		var sideTextPolje = new Kinetic.Rect({
+			x: 100 + 8*80 + 130,
+			y: 40,
+			stroke: '#555',
+			strokeWidth: 3,
+			fill: '#ddd',
+			width: 340,
+			height: sideText_naslov.getHeight() + sideText.getHeight() - 40,
+			shadowColor: 'black',
+			shadowBlur: 10,
+			shadowOffset: 10,
+			shadowOpacity: 0.2,
+			cornerRadius: 3
+		});
+		sideTextLayer.add(sideTextPolje);
+		sideTextLayer.add(sideText_naslov);
+		sideTextLayer.add(sideText);
+		var rjesenja = '';
+		
+		function ispis_rjesenja(){
+			rjesenjaTextLayer.removeChildren();
+			var rjesenjaText_naslov = new Kinetic.Text({
+			x: 100 + 8*80 + 130,
+			y: 225,
+			text: '92 rješenja : ',
+			fontSize: 16,
+			fontFamily: 'Calibri',
+			fontStyle: 'bold',
+			fill: '#555',
+			width: 340,
+			padding: 20,
+			align: 'left'
+			});
+			var rjesenjaText = new Kinetic.Text({
+			x: 100 + 8*80 + 130,
+			y: 190 + rjesenjaText_naslov.getHeight(),
+			text: rjesenja,
+			fontSize: 15,
+			fontFamily: 'Calibri',
+			fontStyle: 'bold',
+			fill: '#555',
+			width: 270,
+			padding: 20,
+			align: 'left'
+			});
+			var rjesenjaTextPolje = new Kinetic.Rect({
+			x: 100 + 8*80 + 130,
+			y: 225,
+			stroke: '#555',
+			strokeWidth: 3,
+			fill: '#ddd',
+			width: 340,
+			height: rjesenjaText_naslov.getHeight() + rjesenjaText.getHeight() - 40,
+			shadowColor: 'black',
+			shadowBlur: 10,
+			shadowOffset: 10,
+			shadowOpacity: 0.2,
+			cornerRadius: 3
+			});
+			
+			rjesenjaTextLayer.add(rjesenjaTextPolje);
+			rjesenjaTextLayer.add(rjesenjaText);
+			rjesenjaTextLayer.add(rjesenjaText_naslov);
+			rjesenjaTextLayer.add(group_simuliraj);
+			rjesenjaTextLayer.draw();
+		}
+		/*  
+			Kreiramo grupu objekata koji zajedno čine botun "Postavi ploču" koji se sastoji od 
+			teksta i okvira. Nadalje grupa kao cjelina ima svoje događaje koje smo stvorili 
+			nakon što smo dodali objekte u grupu. Unutar svakog događaja se odvija zasebna 
+			JavaScript funkcija. Grupu na kraju dodajemo na već postojeći sloj unutar pozornice.
+		*/
+		var postavi_kraljice_text = new Kinetic.Text({
+			x: 100 + 8*80 + 130,
+			y: 40 + sideTextPolje.getHeight() + 10,
+			fontSize: 20,
+			text: 'Postavi ploču',
+			fontFamily: 'Calibri',
+			fontStyle: 'bold',
+			fill: 'grey',
+			width: 160,
+			padding: 5,
+			align: 'center'
+		});
+		var postavi_kraljice_okvir = new Kinetic.Rect({
+			x: 100 + 8*80 + 130,
+			y: 40 + sideTextPolje.getHeight() + 10,
+			width:160,
+			height: postavi_kraljice_text.getHeight(),
+			stroke: 'grey',
+			strokeWidth: 3,
+			fill: 'WhiteSmoke',
+			shadowColor: 'black',
+			shadowBlur: 10,
+			shadowOffset: 5,
+			shadowOpacity: 0.2,
+			cornerRadius: 3
+		});
+		group_postavi_kraljice.add(postavi_kraljice_okvir);
+		group_postavi_kraljice.add(postavi_kraljice_text);
+		
+		group_postavi_kraljice.on('mouseover', function() {
+			document.body.style.cursor = 'pointer';
+			postavi_kraljice_okvir.setFill('FloralWhite');
+			sideTextLayer.draw();
+		});
+		group_postavi_kraljice.on('mousedown', function() {
+			document.body.style.cursor = 'pointer';
+			postavi_kraljice_text.setFill('green');
+			postavi_kraljice_okvir.setStroke('green');
+			postavi_kraljice_okvir.setFill('FloralWhite');
+			postavi_kraljice_okvir.setShadowColor('green');
+			sideTextLayer.draw();
+		});
+		group_postavi_kraljice.on('mouseup', function() {
+			document.body.style.cursor = 'pointer';
+			postavi_kraljice_text.setFill('grey');
+			postavi_kraljice_okvir.setStroke('grey');
+			postavi_kraljice_okvir.setFill('FloralWhite');
+			postavi_kraljice_okvir.setShadowColor('grey');
+			sideTextLayer.draw();
+		});
+		group_postavi_kraljice.on('mouseout', function() {
+			document.body.style.cursor = 'default';
+			postavi_kraljice_text.setFill('grey');
+			postavi_kraljice_okvir.setStroke('grey');
+			postavi_kraljice_okvir.setFill('WhiteSmoke');
+			postavi_kraljice_okvir.setShadowColor('grey');
+			sideTextLayer.draw();	
+		});
+		group_postavi_kraljice.on('click', function() {
+			postavi_kraljice();
+		});
+		sideTextLayer.add(group_postavi_kraljice);
+		/*  
+			Kreiramo grupu objekata koji zajedno čine botun "Prikaz rješenja" koji se sastoji od 
+			teksta i okvira. Nadalje grupa kao cjelina ima svoje događaje koje smo stvorili 
+			nakon što smo dodali objekte u grupu. Unutar svakog događaja se odvija zasebna 
+			JavaScript funkcija. Grupu na kraju dodajemo na već postojeći sloj unutar pozornice.
+		*/
+		var prikaz_rjesenja_text = new Kinetic.Text({
+			x: 100 + 8*80 + 310,
+			y: 40 + sideTextPolje.getHeight() + 10,
+			fontSize: 20,
+			text: 'Prikaz rješenja',
+			fontFamily: 'Calibri',
+			fontStyle: 'bold',
+			fill: 'grey',
+			width: 160,
+			padding: 5,
+			align: 'center'
+		});
+		var prikaz_rjesenja_okvir = new Kinetic.Rect({
+			x: 100 + 8*80 + 310,
+			y: 40 + sideTextPolje.getHeight() + 10,
+			width:160,
+			height: prikaz_rjesenja_text.getHeight(),
+			stroke: 'grey',
+			strokeWidth: 3,
+			fill: 'WhiteSmoke',
+			shadowColor: 'black',
+			shadowBlur: 10,
+			shadowOffset: 5,
+			shadowOpacity: 0.2,
+			cornerRadius: 3
+		});
+		group_prikaz_rjesenja.add(prikaz_rjesenja_okvir);
+		group_prikaz_rjesenja.add(prikaz_rjesenja_text);
+		
+		group_prikaz_rjesenja.on('mouseover', function() {
+			document.body.style.cursor = 'pointer';
+			prikaz_rjesenja_okvir.setFill('FloralWhite');
+			sideTextLayer.draw();
+		});
+		group_prikaz_rjesenja.on('mousedown', function() {
+			document.body.style.cursor = 'pointer';
+			prikaz_rjesenja_text.setFill('green');
+			prikaz_rjesenja_okvir.setStroke('green');
+			prikaz_rjesenja_okvir.setFill('FloralWhite');
+			prikaz_rjesenja_okvir.setShadowColor('green');
+			sideTextLayer.draw();
+		});
+		group_prikaz_rjesenja.on('mouseup', function() {
+			document.body.style.cursor = 'pointer';
+			prikaz_rjesenja_text.setFill('grey');
+			prikaz_rjesenja_okvir.setStroke('grey');
+			prikaz_rjesenja_okvir.setFill('FloralWhite');
+			prikaz_rjesenja_okvir.setShadowColor('grey');
+			sideTextLayer.draw();
+		});
+		group_prikaz_rjesenja.on('mouseout', function() {
+			document.body.style.cursor = 'default';
+			prikaz_rjesenja_text.setFill('grey');
+			prikaz_rjesenja_okvir.setStroke('grey');
+			prikaz_rjesenja_okvir.setFill('WhiteSmoke');
+			prikaz_rjesenja_okvir.setShadowColor('grey');
+			sideTextLayer.draw();	
+		});
+		group_prikaz_rjesenja.on('click', function() {
+			rjesenja = '';
+			postavi_kraljice();
+			Algoritam(0);
+		});
+		sideTextLayer.add(group_prikaz_rjesenja);
+		var simuliraj_rjesenja_text = new Kinetic.Text({
+			x: 100 + 8*80 + 315,
+			y: 235,
+			fontSize: 16,
+			text: 'Simuliraj',
+			fontFamily: 'Calibri',
+			fontStyle: 'bold',
+			fill: 'grey',
+			width: 150,
+			padding: 5,
+			align: 'center'
+		});
+		var simuliraj_rjesenja_okvir = new Kinetic.Rect({
+			x: 100 + 8*80 + 315,
+			y: 235,
+			width:150,
+			height: simuliraj_rjesenja_text.getHeight(),
+			stroke: 'grey',
+			strokeWidth: 3,
+			fill: 'WhiteSmoke',
+			shadowColor: 'black',
+			shadowBlur: 10,
+			shadowOffset: 5,
+			shadowOpacity: 0.2,
+			cornerRadius: 3
+		});
+		group_simuliraj.add(simuliraj_rjesenja_okvir);
+		group_simuliraj.add(simuliraj_rjesenja_text);
+		
+		group_simuliraj.on('mouseover', function() {
+			document.body.style.cursor = 'pointer';
+			simuliraj_rjesenja_okvir.setFill('FloralWhite');
+			rjesenjaTextLayer.draw();
+		});
+		group_simuliraj.on('mousedown', function() {
+			document.body.style.cursor = 'pointer';
+			simuliraj_rjesenja_text.setFill('green');
+			simuliraj_rjesenja_okvir.setStroke('green');
+			simuliraj_rjesenja_okvir.setFill('FloralWhite');
+			simuliraj_rjesenja_okvir.setShadowColor('green');
+			rjesenjaTextLayer.draw();
+		});
+		group_simuliraj.on('mouseup', function() {
+			document.body.style.cursor = 'pointer';
+			simuliraj_rjesenja_text.setFill('grey');
+			simuliraj_rjesenja_okvir.setStroke('grey');
+			simuliraj_rjesenja_okvir.setFill('FloralWhite');
+			simuliraj_rjesenja_okvir.setShadowColor('grey');
+			rjesenjaTextLayer.draw();
+		});
+		group_simuliraj.on('mouseout', function() {
+			document.body.style.cursor = 'default';
+			simuliraj_rjesenja_text.setFill('grey');
+			simuliraj_rjesenja_okvir.setStroke('grey');
+			simuliraj_rjesenja_okvir.setFill('WhiteSmoke');
+			simuliraj_rjesenja_okvir.setShadowColor('grey');
+			rjesenjaTextLayer.draw();	
+		});
+		group_simuliraj.on('click', function() {
+			pokreni_simulaciju(0);
+		});
+			
+		/*
+			Na već postojeći sloj kraljica "kraljiceLayer" dodajemo 8 kraljica sa njihovim događajima. 
+			Nadalje na sloj ploče "plocaLayer" dodajemo crno, bijela polja. Te na sloj teksta "textLayer" 
+			dodajemo vizualne pozicije polja. 
+			Petlja se pomiče tako da index j predstavlja redak, a index i predstavlja stupac. Stupaca ima 
+			9 jer su u devetom stupcu početne pozicije kraljica sa strane ploče.
+		*/
+		for (var j=0; j<8; j++)
+		{
+			y_polje = 40 + j*80;
+			for (var i=0; i<9; i++)
+			{
+				x_polje = 100 + i*80;	
+				if(i == 8) { 
+					x_polje = x_polje + 40; 
+					y_polje = y_polje + 10;
+					/* 
+						Stvaramo 8 različitih objekata kraljica sa njihovim atributima i događajima.
+						Atributi su početne i trenutne kordinate. Događaji su "dragstart" i "dragend".
+					*/
+					kraljice[j] = new Kinetic.Image({
+							  id: "" + j,
+							  x: x_polje,
+							  y: y_polje,
+							  image: imageObj,
+							  width: 60,
+							  height: 60,
+							  draggable: true,
+							  shadowColor: 'black',
+							  shadowBlur: 10,
+							  shadowOffset: 10,
+							  shadowOpacity: 0.5
+							});
+					/*Atributi*/
+					niz_pocetniX[j] = x_polje;
+					niz_pocetniY[j] = y_polje;
+					trenutniX[j] = x_polje;
+					trenutniY[j] = y_polje;
+					/*Događaji*/
+					kraljice[j].on('dragstart', function() {
+						_onemoguci_polja_na_ploci_osim_kraljice(this);
+					});
+					kraljice[j].on('dragend', function() {
+					izracunaj_Kordinate(this);
+					this.transitionTo({
+								x: xy[0],
+								y: xy[1],
+								opacity: 1,
+								duration: 0.6,
+								});
+					trenutniX[this.getId()] = xy[0];
+					trenutniY[this.getId()] = xy[1];
+					onemoguciLayer.removeChildren();
+					onemoguciLayer.draw();
+					});
+					kraljice[j].on('mouseover', function() {
+						document.body.style.cursor = 'pointer';
+						this.setShadowColor('brown');
+						kraljiceLayer.draw();
+					});
+					kraljice[j].on('mouseout', function() {
+						document.body.style.cursor = 'default';
+						this.setShadowColor('black');
+						kraljiceLayer.draw();
+					});
+					kraljiceLayer.add(kraljice[j]);
+				}
+				else
+				{	
+					if(j == 0) /*Ako smo u prvom retku dodajemo slova a,b,c ...*/
+					{
+						var donjiText = new Kinetic.Label({
+								x: x_polje + 40,
+								y: y_polje,
+								opacity: 0.75,
+								listening: false,
+								text: {
+								  text: String.fromCharCode(97 + i),
+								  fontFamily: 'Calibri',
+								  fontSize: 18,
+								  fontStyle: 'bold',
+								  padding: 5,
+								  fill: 'white'
+								},
+								rect: {
+								  fill: 'black',
+								  pointerDirection: 'down',
+								  pointerWidth: 10,
+								  pointerHeight: 10,
+								  lineJoin: 'round',
+								  shadowColor: 'black',
+								  shadowBlur: 10,
+								  shadowOffset: 10,
+								  shadowOpacity: 0.5
+								}
+							  });
+							
+							  textLayer.add(donjiText);
+					}
+					if(i == 0) /*Ako smo u prvom stupcu dodajemo brojke 8,7,6 ...*/
+					{
+						var lijeviText = new Kinetic.Label({
+							x: x_polje,
+							y: y_polje + 40,
+							opacity: 0.75,
+							listening: false,
+							text: {
+							  text: '' + (8-j),
+							  fontFamily: 'Calibri',
+							  fontSize: 18,
+							  fontStyle: 'bold',
+							  padding: 5,
+							  fill: 'white'
+							},
+							rect: {
+							  fill: 'black',
+							  pointerDirection: 'right',
+							  pointerWidth: 10,
+							  pointerHeight: 10,
+							  lineJoin: 'round',
+							  shadowColor: 'black',
+							  shadowBlur: 10,
+							  shadowOffset: 10,
+							  shadowOpacity: 0.5
+							}
+						  });
+						  textLayer.add(lijeviText);
+					}
+					/* 
+						Logički raspisani uvjeti temeljem kojih dodajemo crno odnosno bijelo polje. 
+						Svako polje ima jedan atribut, koji je "implementiran", pozivanjem funkcija iz zaglavlja,
+						u obliku niza koji nam govori na koja polja možemo, a na koja ne možemo spusititi kraljicu.
+					*/
+					if( ((i%2 == 1) && (j%2 == 1)) || ((i%2 == 0) && (j%2 == 0)) ) {
+						nizPoljaPloce[j][i] = new Kinetic.Image({
+								id: "" + (j + 1) + (i + 1),
+								x: x_polje,
+								y: y_polje,
+								width: 80,
+								height: 80,
+								image: imageCrnoPolje,
+								shadowColor: 'black',
+								shadowBlur: 10,
+								shadowOffset: 10,
+								shadowOpacity: 0.5
+							  });	
+						plocaLayer.add(nizPoljaPloce[j][i]);
+					}
+					if( ((i%2 == 1) && (j%2 == 0)) ||((i%2 == 0) && (j%2 == 1)) ) {	
+						nizPoljaPloce[j][i] = new Kinetic.Image({
+											id: "" + (j + 1) + (i + 1),
+											x: x_polje,
+											y: y_polje,
+											width: 80,
+											height: 80,
+											image: imageBijeloPolje,
+											shadowColor: 'black',
+											shadowBlur: 10,
+											shadowOffset: 10,
+											shadowOpacity: 0.5
+										  });
+						plocaLayer.add(nizPoljaPloce[j][i]);
+					}
+				}
+			}
+		}
+	</script>
+</body>
+</html>
